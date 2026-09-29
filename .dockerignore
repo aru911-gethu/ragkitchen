@@ -1,0 +1,27 @@
+# Keep secrets, history and dev/test material out of the image.
+# NOTE: README.md must stay in the context (the Dockerfile copies it).
+.git
+.github
+.venv
+venv
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.deepeval/
+
+# Secrets: provided at runtime by docker-compose env_file
+.env
+.env.*
+!.env.example
+
+# Provided at runtime by the ./data volume mount
+data/
+
+# Not needed to run the app
+docs/
+tests/
+scratch/
+uv.lock
+*.log

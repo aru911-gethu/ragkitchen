@@ -1,7 +1,7 @@
-# Cognitive Kitchen 🍳⚡
+# RAG Kitchen 🍳⚡
 **Enterprise RAG Strategy Benchmarking Testbed & AI Culinary Assistant**
 
-[![tests](https://github.com/aru911-gethu/CognitiveKitchen/actions/workflows/tests.yml/badge.svg)](https://github.com/aru911-gethu/CognitiveKitchen/actions/workflows/tests.yml)
+[![tests](https://github.com/aru911-gethu/ragkitchen/actions/workflows/tests.yml/badge.svg)](https://github.com/aru911-gethu/ragkitchen/actions/workflows/tests.yml)
 
 > *"A RAG test kitchen where AI Product Engineers and Technical Program Managers (TPMs) can play around with, benchmark, and taste-test diverse RAG strategies to lock the optimal production pipeline for their enterprise use-case — and as a culinary pun, use the exact same locked pipeline to power an interactive recipe-based kitchen assistant answering: **'What can I cook tonight?'***"*
 
@@ -9,22 +9,22 @@
 
 ## 📦 Package Installation & CLI Executables
 
-`cognitive-kitchen` is packaged as a standard Python project configured in [pyproject.toml](file:///c:/Users/aru91/OneDrive/Documents/Workspace_AI/Projects_Vscode/CognitiveKitchen/pyproject.toml). Installing the package registers four dedicated `ck-*` CLI commands in your environment:
+RAG Kitchen is packaged as a standard Python project. Installing the package registers four dedicated `ck-*` CLI commands in your environment:
 
-| CLI Command | Handler Function | Purpose & Output |
-| :--- | :--- | :--- |
-| **`uv run ck-api`** | `cognitive_kitchen:serve_api` | Launches FastAPI REST API & SSE server on `http://127.0.0.1:8010` |
-| **`uv run ck-ui`** | `cognitive_kitchen:serve_ui` | Launches Streamlit multi-page UI console on `http://127.0.0.1:8501` |
-| **`uv run ck-vocab`** | `cognitive_kitchen:build_vocabulary` | Normalizes ingredient strings to `data/eval/ingredient_map.json` |
-| **`uv run ck-graph`** | `cognitive_kitchen:build_graph` | Ingests JSON runs & rebuilds Neo4j Knowledge Graph |
+| CLI Command | Purpose & Output |
+| :--- | :--- |
+| **`uv run ck-api`** | Launches FastAPI REST API & SSE server on `http://127.0.0.1:8010` |
+| **`uv run ck-ui`** | Launches Streamlit multi-page UI console on `http://127.0.0.1:8501` |
+| **`uv run ck-vocab`** | Normalizes ingredient strings to `data/eval/ingredient_map.json` |
+| **`uv run ck-graph`** | Ingests JSON runs & rebuilds Neo4j Knowledge Graph |
 
 ### Installation Modes
 
 #### Option A: Using `uv` (Recommended)
 `uv` automatically creates a virtual environment, installs dependencies, and links the `ck-*` executables in editable mode:
 ```bash
-git clone https://github.com/aru911-gethu/CognitiveKitchen.git
-cd CognitiveKitchen
+git clone https://github.com/aru911-gethu/ragkitchen.git
+cd ragkitchen
 uv sync
 uv run playwright install chromium
 ```
@@ -66,12 +66,12 @@ By introducing **`constraint_respected`** as a core evaluation axis and leveragi
 
 ## 🏗️ Architecture & 6-Stage RAG Pipeline Mapping
 
-Cognitive Kitchen features a modular plugin registry ([src/cognitive_kitchen/rag/registry.py](file:///c:/Users/aru91/OneDrive/Documents/Workspace_AI/Projects_Vscode/CognitiveKitchen/src/cognitive_kitchen/rag/registry.py)) that isolates every stage of the RAG lifecycle. Each stage is independently benchmarked against our Ground-Truth Golden Dataset ([data/golden_dataset.json](file:///c:/Users/aru91/OneDrive/Documents/Workspace_AI/Projects_Vscode/CognitiveKitchen/data/golden_dataset.json)).
+RAG Kitchen features a modular plugin registry that isolates every stage of the RAG lifecycle. Each stage is independently benchmarked against our Ground-Truth Golden Dataset.
 
 ```
                        ┌────────────────────────────────────────────────┐
                        │  STAGE 1: Ingestion & Live SSE Parser Stream    │
-                       │  PDF (pdf_ingest.py) | Web Crawl (web_ingest.py)│
+                       │  PDF Ingest | Web Crawl                         │
                        └───────────────────────┬────────────────────────┘
                                                │
                        ┌───────────────────────▼────────────────────────┐
@@ -98,31 +98,31 @@ Cognitive Kitchen features a modular plugin registry ([src/cognitive_kitchen/rag
 ```
 
 ### Stage 1 — Multi-Source Ingestion & Streaming
-- **PDF Ingest** ([src/cognitive_kitchen/ingest/pdf_ingest.py](file:///c:/Users/aru91/OneDrive/Documents/Workspace_AI/Projects_Vscode/CognitiveKitchen/src/cognitive_kitchen/ingest/pdf_ingest.py)): Page-by-page extraction emitting Server-Sent Events (`ProgressEvent`) tracking elapsed time, character counts, and recipes detected.
-- **Web Crawler** ([src/cognitive_kitchen/ingest/web_ingest.py](file:///c:/Users/aru91/OneDrive/Documents/Workspace_AI/Projects_Vscode/CognitiveKitchen/src/cognitive_kitchen/ingest/web_ingest.py)): Playwright-driven crawler with SSRF safeguards, domain boundary rules, and Schema.org JSON-LD parsing (`detected_by: json-ld | headings | prose-boundary | heuristic-text`).
+- **PDF Ingest**: Page-by-page extraction emitting Server-Sent Events (`ProgressEvent`) tracking elapsed time, character counts, and recipes detected.
+- **Web Crawler**: Playwright-driven crawler with SSRF safeguards, domain boundary rules, and Schema.org JSON-LD parsing (`detected_by: json-ld | headings | prose-boundary | heuristic-text`).
 
 ### Stage 2 — Chunking Strategy Evaluation
-- **Plugins** ([src/cognitive_kitchen/rag/chunking/](file:///c:/Users/aru91/OneDrive/Documents/Workspace_AI/Projects_Vscode/CognitiveKitchen/src/cognitive_kitchen/rag/chunking)): 8 chunkers (`recipe`, `recipe_sections`, `recursive`, `semantic_adjacent`, `markdown_header`, `character`, `token`, `sentence`).
+- **Plugins**: 8 chunkers (`recipe`, `recipe_sections`, `recursive`, `semantic_adjacent`, `markdown_header`, `character`, `token`, `sentence`).
 - **Benchmark Findings**: Structure-aware `recipe` chunking (keeping single recipes intact) yields $0.991$ recall and $1.000$ self-sufficiency. Arbitrary character-recursive chunking straddles recipe boundaries, causing LLMs to hallucinate ingredient quantities from unrelated recipes.
 
 ### Stage 3 — Retrieval & Safety Pre-Filtering
-- **Plugins** ([src/cognitive_kitchen/rag/retrieval/](file:///c:/Users/aru91/OneDrive/Documents/Workspace_AI/Projects_Vscode/CognitiveKitchen/src/cognitive_kitchen/rag/retrieval)): 9 retrieval strategies combining Dense (`bge-small-en-v1.5`), Lexical (BM25, TF-IDF), Hybrid Reciprocal Rank Fusion (RRF), Maximal Marginal Relevance (MMR), Cross-Encoder Re-ranking, and Neo4j Graph Constraint Pre-filtering (`graph_hybrid`).
+- **Plugins**: 9 retrieval strategies combining Dense (`bge-small-en-v1.5`), Lexical (BM25, TF-IDF), Hybrid Reciprocal Rank Fusion (RRF), Maximal Marginal Relevance (MMR), Cross-Encoder Re-ranking, and Neo4j Graph Constraint Pre-filtering (`graph_hybrid`).
 - **Evaluated On**: $Hit@K$, $Recall@K$, $MAP$, $Diversity$, and `constraint_respected`.
 
 ### Stage 4 — Query Transformations
-- **Plugins** ([src/cognitive_kitchen/rag/query/](file:///c:/Users/aru91/OneDrive/Documents/Workspace_AI/Projects_Vscode/CognitiveKitchen/src/cognitive_kitchen/rag/query)): `passthrough`, `decompose`, `hyde`.
+- **Plugins**: `passthrough`, `decompose`, `hyde`.
 - **Benchmark Findings**: Sub-query `decompose` provides highest retrieval boost for multi-intent questions. Hypothetical Document Embeddings (`hyde`) cost ~400s per query on CPU without measurable accuracy gains.
 
 ### Stage 5 — Pure Knowledge Graph Traversal
-- **Graph Traversal** ([src/cognitive_kitchen/rag/graph/](file:///c:/Users/aru91/OneDrive/Documents/Workspace_AI/Projects_Vscode/CognitiveKitchen/src/cognitive_kitchen/rag/graph)): Direct Cypher query engine on Neo4j for zero-embedding deterministic graph traversal.
-- **Canonical Vocabulary Engine** ([src/cognitive_kitchen/rag/vocab/curated.py](file:///c:/Users/aru91/OneDrive/Documents/Workspace_AI/Projects_Vscode/CognitiveKitchen/src/cognitive_kitchen/rag/vocab/curated.py)): Deterministic rule engine executed via `uv run ck-vocab`, collapsing 1,776 raw ingredient variations into 158 canonical entities (e.g. mapping fresh ginger, ginger paste, and ground ginger safely).
+- **Graph Traversal**: Direct Cypher query engine on Neo4j for zero-embedding deterministic graph traversal.
+- **Canonical Vocabulary Engine**: Deterministic rule engine executed via `uv run ck-vocab`, collapsing 1,776 raw ingredient variations into 158 canonical entities (e.g. mapping fresh ginger, ginger paste, and ground ginger safely).
 - **Capability**: Answers complex graph logic that vector search cannot reach:
   - *"What can I cook tonight with my current pantry items?"* (Returns exact recipes and missing ingredients).
   - *"What can I substitute for ghee?"* (Traverses ingredient category nodes).
   - *"How many recipes are dairy-free?"* (Direct graph aggregation).
 
 ### Stage 6 — LLM Generation & Faithfulness
-- **Plugins** ([src/cognitive_kitchen/rag/generate/](file:///c:/Users/aru91/OneDrive/Documents/Workspace_AI/Projects_Vscode/CognitiveKitchen/src/cognitive_kitchen/rag/generate)): Local Qwen generation supporting `reordered`, `stuff_strict`, `structured`, and `map_reduce` strategies.
+- **Plugins**: Local Qwen generation supporting `reordered`, `stuff_strict`, `structured`, and `map_reduce` strategies.
 - **Evaluated On**: DeepEval Faithfulness & G-Eval Cookability scoring.
 - **Lost-in-the-Middle Verification**: `reordered` outperforms `stuff_strict` on identical context chunks simply by placing high-relevance chunks at context boundaries.
 
@@ -130,7 +130,7 @@ Cognitive Kitchen features a modular plugin registry ([src/cognitive_kitchen/rag
 
 ## 🖥️ Streamlit Interactive UI Console
 
-Cognitive Kitchen delivers a 3-page interactive web application ([src/cognitive_kitchen/ui/](file:///c:/Users/aru91/OneDrive/Documents/Workspace_AI/Projects_Vscode/CognitiveKitchen/src/cognitive_kitchen/ui)):
+RAG Kitchen delivers a 3-page interactive web application:
 
 ```
                                ┌──────────────────────────────────────────┐
@@ -140,15 +140,15 @@ Cognitive Kitchen delivers a 3-page interactive web application ([src/cognitive_
          ┌──────────────────────────────────────────┼──────────────────────────────────────────┐
          │                                          │                                          │
 ┌────────▼─────────────────────────┐      ┌─────────▼────────────────────────┐      ┌──────────▼────────────────────────┐
-│ 1. Data Ingest (app.py)          │      │ 2. RAG Lab (2_RAG_Lab.py)        │      │ 3. Kitchen Chat (3_Kitchen.py)    │
+│ 1. Data Ingest                   │      │ 2. RAG Lab                       │      │ 3. Kitchen Chat                   │
 │ Live PDF upload & Web Crawler    │      │ Stage-by-stage benchmark sandbox │      │ Interactive Culinary Assistant    │
 │ Streaming SSE ingestion telemetry│      │ Locked to Ground-Truth Benchmark │      │ Multi-dataset switch & Pantry Audit│
 └──────────────────────────────────┘      └──────────────────────────────────┘      └───────────────────────────────────┘
 ```
 
-1. **Ingest Tab** ([app.py](file:///c:/Users/aru91/OneDrive/Documents/Workspace_AI/Projects_Vscode/CognitiveKitchen/src/cognitive_kitchen/ui/app.py)): Ingest PDF cookbooks or crawl web recipe index pages with live SSE event progress.
-2. **RAG Lab Sandbox** ([2_RAG_Lab.py](file:///c:/Users/aru91/OneDrive/Documents/Workspace_AI/Projects_Vscode/CognitiveKitchen/src/cognitive_kitchen/ui/pages/2_RAG_Lab.py)): Benchmark and compare strategies across all 6 stages live against the hand-verified Ground-Truth Golden Dataset (`load_gds_ingested()`). Lock your winning pipeline for production deployment.
-3. **Kitchen Culinary Assistant** ([3_Kitchen.py](file:///c:/Users/aru91/OneDrive/Documents/Workspace_AI/Projects_Vscode/CognitiveKitchen/src/cognitive_kitchen/ui/pages/3_Kitchen.py)): Chat with your locked production pipeline.
+1. **Ingest Tab**: Ingest PDF cookbooks or crawl web recipe index pages with live SSE event progress.
+2. **RAG Lab Sandbox**: Benchmark and compare strategies across all 6 stages live against the hand-verified Ground-Truth Golden Dataset (`load_gds_ingested()`). Lock your winning pipeline for production deployment.
+3. **Kitchen Culinary Assistant**: Chat with your locked production pipeline.
    - **Active Dataset Selector**: Seamlessly switch context between the benchmark GDS PDF and custom uploaded user cookbooks.
    - **Pantry Audit Engine**: Ask *"Can I make this with what I have in my kitchen?"* with automatic fallback recipe card evaluation.
 
@@ -156,7 +156,7 @@ Cognitive Kitchen delivers a 3-page interactive web application ([src/cognitive_
 
 ## 📊 Ground-Truth Golden Dataset & Benchmark Design
 
-The evaluation benchmark lives in [data/golden_dataset.json](file:///c:/Users/aru91/OneDrive/Documents/Workspace_AI/Projects_Vscode/CognitiveKitchen/data/golden_dataset.json). It contains 50 hand-verified recipes extracted from the sample cookbook and 229 evaluation queries spanning 7 intent families.
+The evaluation benchmark is a hand-verified golden dataset. It contains 50 hand-verified recipes extracted from the sample cookbook and 229 evaluation queries spanning 7 intent families.
 
 ```
 Metric Matrix Tier        Required Benchmark Data         Evaluated Metrics
@@ -168,7 +168,7 @@ Tier 3: Labeled Benchmark + data/golden_dataset.json      Hit@K, Recall@K, MAP, 
 ```
 
 > [!NOTE]
-> **Zero Benchmark Fitting**: The ingestion, indexing, and retrieval build pipelines never inspect `golden_dataset.json`. Ground truth is strictly isolated for evaluation. Refer to [docs/golden-dataset.md](docs/golden-dataset.md) for details on building custom truth sets.
+> **Zero Benchmark Fitting**: The ingestion, indexing, and retrieval build pipelines never inspect `golden_dataset.json`. Ground truth is strictly isolated for evaluation. Refer to [Golden Dataset guide](docs/golden-dataset.md) for details on building custom truth sets.
 
 ---
 
@@ -177,8 +177,8 @@ Tier 3: Labeled Benchmark + data/golden_dataset.json      Hit@K, Recall@K, MAP, 
 ### Step 1: Environment Setup
 ```bash
 # Clone repository
-git clone https://github.com/aru911-gethu/CognitiveKitchen.git
-cd CognitiveKitchen
+git clone https://github.com/aru911-gethu/ragkitchen.git
+cd ragkitchen
 
 # Install dependencies & CLI entrypoints
 uv sync
@@ -218,17 +218,33 @@ uv run pytest tests -q
 
 ---
 
+## 🐳 Docker Deployment
+
+Run the API and the UI as containers with Docker Compose:
+
+```bash
+cp .env.example .env            # fill in your keys
+docker compose up -d --build
+```
+
+- UI: `http://localhost:8501`
+- API: `http://localhost:8010` (interactive docs at `/docs`)
+
+Ingested data and caches are kept in the local `data/` folder.
+
+---
+
 ## 🔒 Security & Edge Deployment
 
 - **SSRF Prevention**: The Playwright crawler rejects non-HTTP schemes and resolves destination IPs against loopback, link-local, private, and reserved subnets before fetching.
 - **Robots.txt Adherence**: Checked dynamically per host; disallowed URLs are skipped cleanly.
 - **Upload Guards**: File uploads restricted to `.pdf` under 80 MB.
-- **Zero GPU Requirement**: Designed for CPU-bound environments (12 CPU cores, 16 GB RAM) with token, cost, and latency telemetry tracked per query stage in [src/cognitive_kitchen/rag/telemetry.py](file:///c:/Users/aru91/OneDrive/Documents/Workspace_AI/Projects_Vscode/CognitiveKitchen/src/cognitive_kitchen/rag/telemetry.py).
+- **Zero GPU Requirement**: Designed for CPU-bound environments (12 CPU cores, 16 GB RAM) with token, cost, and latency telemetry tracked per query stage.
 
 ---
 
 ## 📚 Related Academic Literature
 
-1. **Semantic Collapse in Vector Search**: *Negation is Not Semantic: Diagnosing Dense Retrieval Failure Modes* ([arXiv:2603.17580](https://arxiv.org/abs/2603.17580)) and *Exclusion-Sensitive Penalization for Negative-Constraint Retrieval* ([arXiv:2608.30130](https://arxiv.org/html/2608.30130v2)).
-2. **Structure-Aware Chunking Efficiency**: *Evaluating Chunking Strategies for RAG in Enterprise Documents* ([arXiv:2603.24556](https://arxiv.org/abs/2603.24556)) and *Is Semantic Chunking Worth the Computational Cost?* ([arXiv:2410.13070](https://arxiv.org/html/2410.13070v1)).
+1. **Semantic Collapse in Vector Search**: *Negation is Not Semantic: Diagnosing Dense Retrieval Failure Modes* and *Exclusion-Sensitive Penalization for Negative-Constraint Retrieval*.
+2. **Structure-Aware Chunking Efficiency**: *Evaluating Chunking Strategies for RAG in Enterprise Documents* and *Is Semantic Chunking Worth the Computational Cost?*.
 3. **Lost-in-the-Middle Context Effects**: Liu et al., 2023 (*Lost in the Middle: How Language Models Use Long Contexts*).
